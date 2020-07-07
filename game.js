@@ -2,7 +2,6 @@ let prizes_config={
     count:12,
     prize_names:["3000 Credits","35% OFF","Hard Luck","70% OFF","Swagpack","100% OFF","Netflix","50% OFF","Amazon Voucher","2 Extra Spin","CB T-Shirt","CB Book"]
 }
-let stope=true;
 
 let musicConfig = {
     mute:false,
@@ -37,7 +36,8 @@ function preload(){
     this.load.image('wheel','wheel.png');
     this.load.image('pin','pin.png');
     this.load.image('stand','stand.png');
-    this.load.audio('audio','track.mp3');
+    this.load.audio('spin_sound','track.mp3');
+    this.load.audio('win_sound','win.mp3');
 }
 
 function create(){
@@ -70,13 +70,15 @@ function create(){
     
     
 //audio
-    audio=this.sound.add('audio');
+    spin_sound=this.sound.add('spin_sound');
+    win_sound=this.sound.add('win_sound');
   
 //event listner
-    if(stope){
+    let start=true;
+    if(start){
         this.input.on('pointerdown',spinwheel,this)
-    }
-window.stope=false;    
+        k=1;
+    }    
     
 //text object creating
     font_style={
@@ -91,27 +93,34 @@ window.stope=false;
 //game loop
 function update(){
     console.log("inside update");
-    bg.angle+=1;
+    bg.angle-=1;
 }
 
 function spinwheel(){
-    msg.setText("Spinning Started Just Wait");
-    audio.play(musicConfig);
     
-    let rounds=Phaser.Math.Between(3,4);
-    let degrees=Phaser.Math.Between(0,11)*30;
-    let total_angle=rounds*360 + degrees;
-    
-    idx=prizes_config.count - 1- Math.floor(degrees/(360/prizes_config.count));
-    
-    tween=this.tweens.add({
-        targets:wheel,
-        angle: total_angle,
-        ease : "Cubic.easeOut",
-        duration:6000,
-        onComplete:function(){
-            msg.setText("         "+prizes_config.prize_names[idx]);
-            
-        },
-    });
+    if(k){
+        k=0;
+        msg.setText("Spinning Started Just Wait");
+        spin_sound.play(musicConfig);
+
+        let rounds=Phaser.Math.Between(3,4);
+        let degrees=Phaser.Math.Between(0,11)*30;
+        let total_angle=rounds*360 + degrees;
+
+        idx=prizes_config.count - 1- Math.floor(degrees/(360/prizes_config.count));
+
+        tween=this.tweens.add({
+            targets:wheel,
+            angle: total_angle,
+            ease : "Cubic.easeOut",
+            duration:6000,
+            onComplete:function(){
+                spin_sound.stop();
+                win_sound.play(musicConfig);
+                msg.setText("         "+prizes_config.prize_names[idx]);
+                k=1;
+
+            },
+        });   
+    }
 }
